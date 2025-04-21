@@ -1,4 +1,4 @@
-name: Deploy React App and API to Ionos
+name: Deploy React App with API Directory
 
 on:
   push:
@@ -21,26 +21,23 @@ jobs:
     - name: Build React App
       run: CI=false npm run build
       
-    # First deploy PHP API files
-    - name: Deploy PHP API files
-      uses: wangyucode/sftp-upload-action@v1.4.8
-      with:
-        host: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        port: 22
-        localDir: './'  # Root directory to find PHP files
-        remoteDir: '/Movie-Matcher/'
-        forceUpload: true
-        dryRun: false
-        # Only include PHP files and any other API-related files
-        include: |
-          *.php
-          db_connect.php
-          tmdb_api.php
+    - name: Prepare API Directory
+      run: |
+        # Create api directory inside build
+        mkdir -p build/api
+        
+        # Copy all PHP files to the api directory
+        cp *.php build/api/
+        
+        # If you need to exclude certain PHP files from being moved to api
+        # You can do that with specific commands
+        # Example: mv build/api/index.php build/ (if you have a PHP index file that should stay in root)
+        
+        # List files to verify
+        echo "Files in build/api directory:"
+        ls -la build/api/
     
-    # Then deploy React build files
-    - name: Deploy React build
+    - name: Deploy to Ionos
       uses: wangyucode/sftp-upload-action@v1.4.8
       with:
         host: ${{ secrets.FTP_SERVER }}
@@ -48,6 +45,6 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         port: 22
         localDir: './build/'
-        remoteDir: '/Movie-Matcher/'
+        remoteDir: '/Movie-Maker/'
         forceUpload: true
         dryRun: false
