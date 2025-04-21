@@ -1,4 +1,4 @@
-name: Deploy React App with API Directory
+name: Deploy React App with API Files
 
 on:
   push:
@@ -21,30 +21,38 @@ jobs:
     - name: Build React App
       run: CI=false npm run build
       
-    - name: Prepare API Directory with Debug Info
+    - name: Debug Repository Structure
       run: |
-        # Create api directory inside build
-        mkdir -p build/api
+        echo "Repository structure:"
+        ls -la
+        echo "Contents of api directory (if exists):"
+        ls -la api/ || echo "api directory not found at root level"
+        echo "Searching for api directory:"
+        find . -type d -name "api" | grep -v "node_modules" || echo "No api directory found in project"
         
-        # Debug: List all PHP files in repo root
-        echo "PHP files in repository root:"
-        ls -la *.php || echo "No PHP files found with wildcard"
-        
-        # Copy PHP files individually to ensure they're all copied
-        echo "Copying specific PHP files to api directory..."
-        cp create_session.php build/api/ || echo "Failed to copy create_session.php"
-        cp db_connect.php build/api/ || echo "Failed to copy db_connect.php"
-        cp get_matches.php build/api/ || echo "Failed to copy get_matches.php"
-        cp get_movies.php build/api/ || echo "Failed to copy get_movies.php"
-        cp join_session.php build/api/ || echo "Failed to copy join_session.php"
-        cp save_preference.php build/api/ || echo "Failed to copy save_preference.php"
-        cp test-db.php build/api/ || echo "Failed to copy test-db.php"
-        cp tmdb_api.php build/api/ || echo "Failed to copy tmdb_api.php"
-        cp update_session.php build/api/ || echo "Failed to copy update_session.php"
-        
-        # Verify files in api directory
-        echo "Files in build/api directory after copying:"
-        ls -la build/api/
+    - name: Copy API Files to Build
+      run: |
+        # If api directory exists, copy its contents to build/api
+        if [ -d "api" ]; then
+          echo "Found api directory at root level, copying contents to build/api"
+          mkdir -p build/api
+          cp -r api/* build/api/
+          echo "Files copied to build/api:"
+          ls -la build/api/
+        else
+          echo "Searching for API files in the repository..."
+          # Create the destination directory
+          mkdir -p build/api
+          
+          # Try to find and copy PHP files
+          find . -name "*.php" -type f -not -path "./build/*" -not -path "./node_modules/*" | while read file; do
+            echo "Copying $file to build/api/"
+            cp "$file" build/api/
+          done
+          
+          echo "Files in build/api directory:"
+          ls -la build/api/
+        fi
     
     - name: Deploy to Ionos
       uses: wangyucode/sftp-upload-action@v1.4.8
