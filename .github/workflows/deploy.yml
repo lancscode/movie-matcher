@@ -30,7 +30,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         port: 22
         localDir: './'  # Root directory to find PHP files
-        remoteDir: '/kunden/homepages/26/d4298754775/htdocs/'
+        remoteDir: '/Movie-Matcher/'
         forceUpload: true
         dryRun: false
         # Only include PHP files and any other API-related files
