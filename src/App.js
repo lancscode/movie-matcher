@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Heart, X, Film, ArrowRight, Share2, Copy, Star, TrendingUp, Calendar, PlayCircle, RefreshCw, Users, Zap, ChevronLeft, Gift, MessageCircle, Check } from 'lucide-react';
 
-const API_BASE_URL = '//georgetthomas.co.uk/api'; // Replace with your actual API URL
+const API_BASE_URL = '//georgetthomas.co.uk/api'; 
 const TMDB_IMAGE_BASE = '//image.tmdb.org/t/p/w500';
 
 // Main app component
