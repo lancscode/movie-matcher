@@ -613,7 +613,7 @@ export default function MovieMatcher() {
           Test Site
         </h1>
         <p className="text-gray-600 max-w-md mx-auto text-lg">
-          Find movies you and your friend both want to watch! Swipe, match, and enjoy movie night together.
+          Blah balh
         </p>
       </div>
       
