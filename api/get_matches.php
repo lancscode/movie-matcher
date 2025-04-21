@@ -23,7 +23,7 @@ if (empty($session_id)) {
 
 // Get matches
 $stmt = $conn->prepare("
-    SELECT m.match_id, m.movie_id, m.discovered_at, mv.title, mv.poster_path, mv.release_year, mv.overview
+    SELECT m.match_id, m.movie_id, m.discovered_at, mv.title, mv.poster_path, mv.release_year, mv.vote_average, mv.overview
     FROM matches m
     JOIN movies mv ON m.movie_id = mv.movie_id
     WHERE m.session_id = ?

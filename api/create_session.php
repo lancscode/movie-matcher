@@ -3,6 +3,7 @@
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Content-Type: application/json');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -12,6 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once 'db_connect.php';
+
+// Get data from request
+$data = json_decode(file_get_contents('php://input'), true);
+$category = $data['category'] ?? 'popular'; // Default to popular if not specified
 
 // Generate a random session ID (8 characters)
 function generateSessionId($length = 8) {
@@ -39,12 +44,12 @@ while ($result->num_rows > 0) {
     $result = $stmt->get_result();
 }
 
-// Insert the new session
-$stmt = $conn->prepare("INSERT INTO sessions (session_id) VALUES (?)");
-$stmt->bind_param("s", $session_id);
+// Insert the new session with the category
+$stmt = $conn->prepare("INSERT INTO sessions (session_id, category) VALUES (?, ?)");
+$stmt->bind_param("ss", $session_id, $category);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'session_id' => $session_id]);
+    echo json_encode(['success' => true, 'session_id' => $session_id, 'category' => $category]);
 } else {
     echo json_encode(['success' => false, 'error' => $conn->error]);
 }
