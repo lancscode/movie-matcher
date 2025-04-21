@@ -21,20 +21,29 @@ jobs:
     - name: Build React App
       run: CI=false npm run build
       
-    - name: Prepare API Directory
+    - name: Prepare API Directory with Debug Info
       run: |
         # Create api directory inside build
         mkdir -p build/api
         
-        # Copy all PHP files to the api directory
-        cp *.php build/api/
+        # Debug: List all PHP files in repo root
+        echo "PHP files in repository root:"
+        ls -la *.php || echo "No PHP files found with wildcard"
         
-        # If you need to exclude certain PHP files from being moved to api
-        # You can do that with specific commands
-        # Example: mv build/api/index.php build/ (if you have a PHP index file that should stay in root)
+        # Copy PHP files individually to ensure they're all copied
+        echo "Copying specific PHP files to api directory..."
+        cp create_session.php build/api/ || echo "Failed to copy create_session.php"
+        cp db_connect.php build/api/ || echo "Failed to copy db_connect.php"
+        cp get_matches.php build/api/ || echo "Failed to copy get_matches.php"
+        cp get_movies.php build/api/ || echo "Failed to copy get_movies.php"
+        cp join_session.php build/api/ || echo "Failed to copy join_session.php"
+        cp save_preference.php build/api/ || echo "Failed to copy save_preference.php"
+        cp test-db.php build/api/ || echo "Failed to copy test-db.php"
+        cp tmdb_api.php build/api/ || echo "Failed to copy tmdb_api.php"
+        cp update_session.php build/api/ || echo "Failed to copy update_session.php"
         
-        # List files to verify
-        echo "Files in build/api directory:"
+        # Verify files in api directory
+        echo "Files in build/api directory after copying:"
         ls -la build/api/
     
     - name: Deploy to Ionos
@@ -45,6 +54,6 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         port: 22
         localDir: './build/'
-        remoteDir: '/Movie-Maker/'
+        remoteDir: '/Movie-Matcher/'
         forceUpload: true
         dryRun: false
