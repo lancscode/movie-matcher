@@ -22,12 +22,11 @@ jobs:
       run: CI=false npm run build
       
     - name: SFTP Deploy
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
-        server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        protocol: sftp
+        server: ${{ secrets.FTP_SERVER }}
         port: 22
-        local-dir: ./build/  # Only deploy the build directory
-        server-dir: /  # Change this to your website directory on Ionos
+        local_path: './build/*'
+        remote_path: '/'
+        password: ${{ secrets.FTP_PASSWORD }}
