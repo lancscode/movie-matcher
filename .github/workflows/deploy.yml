@@ -1,33 +1,33 @@
-name: Deploy to Ionos
+name: Deploy React App to Ionos
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     
-    # If you have a React build step (uncomment if needed)
-    # - name: Setup Node.js
-    #   uses: actions/setup-node@v3
-    #   with:
-    #     node-version: '18'
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
     
-    # - name: Install dependencies
-    #   run: npm ci
+    - name: Install Dependencies
+      run: npm ci
       
-    # - name: Build project
-    #   run: npm run build
+    - name: Build React App
+      run: npm run build
       
-    # Deploy via FTP
-    - name: FTP Deploy
+    - name: SFTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./ # Change to "./build/" if you're building a React app
-        server-dir: /
+        protocol: sftp
+        port: 22
+        local-dir: ./build/  # Only deploy the build directory
+        server-dir: /  # Change this to your website directory on Ionos
