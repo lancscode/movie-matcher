@@ -1071,7 +1071,7 @@ export default function MovieMatcher() {
   // Render the Results Screen
   const renderResultsScreen = () => {
     // Movie description modal component - separate from cards with improved z-index
-    // Updated modal implementation with better mobile support
+    // Movie description modal component with mobile fixes
 const MovieDescriptionModal = () => {
   if (!expandedMovieId) return null;
   
