@@ -1070,42 +1070,110 @@ export default function MovieMatcher() {
   
   // Render the Results Screen
   const renderResultsScreen = () => {
-    // Movie description modal component - separate from cards with improved z-index
+    // Mobile-friendly movie description modal component
     const MovieDescriptionModal = () => {
       if (!expandedMovieId) return null;
       
       const movie = matches.find(m => m.movie_id === expandedMovieId);
       if (!movie) return null;
       
+      // Add body scroll lock and handle iOS issues
+      useEffect(() => {
+        // Capture the current scroll position
+        const scrollY = window.scrollY;
+        
+        // Add styles to body to prevent scrolling but maintain position
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        
+        // Cleanup function to restore scrolling
+        return () => {
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.width = '';
+          // Restore scroll position
+          window.scrollTo(0, scrollY);
+        };
+      }, []);
+      
+      // Handler to prevent touch events from bubbling
+      const handleTouchStart = (e) => {
+        e.stopPropagation();
+      };
+      
       return (
-        <>
-          {/* Backdrop with very high z-index */}
-          <div className="modal-backdrop" onClick={() => setExpandedMovieId(null)}></div>
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            display: 'flex',
+            flexDirection: 'column',
+            touchAction: 'none'
+          }}
+          onClick={() => setExpandedMovieId(null)}
+        >
+          {/* Dark overlay */}
+          <div 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            }}
+          />
           
-          {/* Modal container with even higher z-index */}
-          <div className="modal-container">
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
-                <button 
-                  onClick={() => setExpandedMovieId(null)}
-                  className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="flex items-center mb-3">
-                <span className="text-yellow-500 mr-1">★</span>
-                <span className="text-gray-700">{formatRating(movie.vote_average)}</span>
-                <span className="mx-2">•</span>
-                <span className="text-gray-700">{movie.release_year || 'Unknown'}</span>
-              </div>
-              
-              <p className="text-gray-600">{movie.overview}</p>
+          {/* Modal container - centered both horizontally and vertically */}
+          <div 
+            style={{
+              position: 'relative',
+              margin: 'auto',
+              width: '90%',
+              maxWidth: '480px',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '20px',
+              maxHeight: '80%',
+              overflowY: 'auto',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              zIndex: 1000000
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>{movie.title}</h3>
+              <button 
+                onClick={() => setExpandedMovieId(null)}
+                style={{ 
+                  padding: '8px', 
+                  backgroundColor: '#f3f4f6', 
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <X size={20} />
+              </button>
             </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: '#f59e0b', marginRight: '4px' }}>★</span>
+              <span style={{ color: '#4b5563' }}>{formatRating(movie.vote_average)}</span>
+              <span style={{ margin: '0 8px' }}>•</span>
+              <span style={{ color: '#4b5563' }}>{movie.release_year || 'Unknown'}</span>
+            </div>
+            
+            <p style={{ color: '#4b5563', lineHeight: '1.5' }}>{movie.overview}</p>
           </div>
-        </>
+        </div>
       );
     };
     
@@ -1179,7 +1247,7 @@ export default function MovieMatcher() {
                       <span className="text-gray-600 text-sm">{movie.release_year || 'Unknown'}</span>
                     </div>
                     
-                    {/* Movie description section with info button */}
+                    {/* Movie description section with fixed height */}
                     {movie.overview && (
                       <div className="mt-2">
                         {/* Fixed height container with ellipsis */}
@@ -1315,45 +1383,6 @@ export default function MovieMatcher() {
     }
     .will-change-transform {
       will-change: transform;
-    }
-    
-    /* Modal styles */
-    .modal-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(2px);
-      z-index: 9999;
-    }
-    
-    .modal-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 1rem;
-    }
-    
-    .modal-content {
-      background: white;
-      width: 100%;
-      max-width: 28rem;
-      border-radius: 0.75rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      padding: 1.25rem;
-      margin: 0 auto;
-      max-height: 80vh;
-      overflow-y: auto;
-      animation: fadeIn 0.3s ease-out forwards;
-      position: relative;
     }
   `;
   
