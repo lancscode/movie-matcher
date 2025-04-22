@@ -1077,14 +1077,6 @@ export default function MovieMatcher() {
       const movie = matches.find(m => m.movie_id === expandedMovieId);
       if (!movie) return null;
       
-      // Add body scroll lock
-      useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-          document.body.style.overflow = '';
-        };
-      }, []);
-      
       return (
         <>
           {/* Backdrop with very high z-index */}
@@ -1300,46 +1292,70 @@ export default function MovieMatcher() {
 
   // Additional CSS styles
   const additionalStyles = `
-  /* Other existing styles... */
-  
-  /* Modal styles */
-  .modal-backdrop {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background-color: rgba(0, 0, 0, 0.75) !important;
-    z-index: 9999 !important;
-  }
-      
-  .modal-container {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 10000 !important;
-    padding: 1rem !important;
-  }
-      
-  .modal-content {
-    background: white !important;
-    width: 100% !important;
-    max-width: 28rem !important;
-    border-radius: 0.75rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-    padding: 1.25rem !important;
-    margin: 0 auto !important;
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-    animation: fadeIn 0.3s ease-out forwards !important;
-    position: relative !important;
-  }
-`;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform {
+      transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+    }
+    .-translate-y-1/2 {
+      --tw-translate-y: -50%;
+      transform: var(--tw-transform);
+    }
+    .translate-y-0 {
+      --tw-translate-y: 0px;
+      transform: var(--tw-transform);
+    }
+    .will-change-transform {
+      will-change: transform;
+    }
+    
+    /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(2px);
+      z-index: 9999;
+    }
+    
+    .modal-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 1rem;
+    }
+    
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 28rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      padding: 1.25rem;
+      margin: 0 auto;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: fadeIn 0.3s ease-out forwards;
+      position: relative;
+    }
+  `;
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
