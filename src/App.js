@@ -1069,123 +1069,133 @@ export default function MovieMatcher() {
   );
   
   // Render the Results Screen
-  const renderResultsScreen = () => (
-    <div className="flex flex-col items-center justify-center p-6 animate-fadeIn">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Your Movie Matches!</h1>
-        <div className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-          {matches.length} {matches.length === 1 ? 'movie' : 'movies'} matched
-        </div>
-        {userNumber === 1 && (
-          <div className="text-xs text-gray-500 mt-1">
-            Checking for new matches every few seconds...
-          </div>
-        )}
-      </div>
+  const renderResultsScreen = () => {
+    // Movie description modal component - separate from cards
+    const MovieDescriptionModal = () => {
+      if (!expandedMovieId) return null;
       
-      {matches.length === 0 ? (
-        <Card className="w-full max-w-md p-8 text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="relative">
-              <X size={48} className="text-gray-400" />
-              <div className="absolute -bottom-2 -right-2 p-1 bg-gray-500 rounded-full">
-                <MessageCircle size={20} className="text-white" />
-              </div>
+      const movie = matches.find(m => m.movie_id === expandedMovieId);
+      if (!movie) return null;
+      
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setExpandedMovieId(null)}>
+          <div className="fixed inset-0 bg-black opacity-50"></div>
+          <div 
+            className="bg-white w-full max-w-md rounded-xl shadow-2xl z-50 p-5 mx-auto relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
+              <button 
+                onClick={() => setExpandedMovieId(null)}
+                className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
+              >
+                <X size={20} />
+              </button>
             </div>
+            
+            <div className="flex items-center mb-3">
+              <span className="text-yellow-500 mr-1">★</span>
+              <span className="text-gray-700">{formatRating(movie.vote_average)}</span>
+              <span className="mx-2">•</span>
+              <span className="text-gray-700">{movie.release_year || 'Unknown'}</span>
+            </div>
+            
+            <p className="text-gray-600">{movie.overview}</p>
           </div>
-          <h3 className="text-xl font-bold text-gray-700">No matches found</h3>
-          <p className="text-gray-600">You two need to find some common ground in your movie tastes!</p>
-          <div className="flex flex-col space-y-3">
-            <Button
-              onClick={() => setScreen('category')}
-              variant="outline"
-            >
-              Try Different Category
-            </Button>
-            <Button
-              onClick={() => setScreen('home')}
-              variant="ghost"
-              size="sm"
-            >
-              Return to Home
-            </Button>
+        </div>
+      );
+    };
+    
+    return (
+      <div className="flex flex-col items-center justify-center p-6 animate-fadeIn">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Your Movie Matches!</h1>
+          <div className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            {matches.length} {matches.length === 1 ? 'movie' : 'movies'} matched
           </div>
-        </Card>
-      ) : (
-        <div className="w-full max-w-3xl relative">
-          {/* Semi-transparent backdrop when description is expanded */}
-          {expandedMovieId && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-30 z-20"
-              onClick={() => setExpandedMovieId(null)}
-            ></div>
-          )}
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-          {matches.map(movie => (
-  <Card key={movie.movie_id} className="overflow-hidden transform transition-all hover:scale-[1.02]">
-    <div className="relative aspect-[2/3]">
-      <img 
-        src={movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : '/placeholder-movie.jpg'} 
-        alt={movie.title} 
-        className="w-full h-full object-cover"
-      />
-      <div className="absolute top-0 right-0 bg-gradient-to-bl from-green-500 to-green-600 text-white p-1.5 m-2 rounded-full shadow-md">
-        <Heart size={16} fill="white" />
-      </div>
-    </div>
-    <div className="p-4">
-      <h3 className="font-bold text-gray-800 line-clamp-1">{movie.title}</h3>
-      <div className="flex items-center mt-1">
-        <span className="text-yellow-500 mr-1">★</span>
-        <span className="text-gray-600 text-sm">{formatRating(movie.vote_average)}</span>
-        <span className="mx-1 text-gray-400">•</span>
-        <span className="text-gray-600 text-sm">{movie.release_year || 'Unknown'}</span>
-      </div>
-      
-      {/* Movie description section */}
-      {movie.overview && (
-        <div className="relative mt-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600 line-clamp-1">
-              {movie.overview}
-            </p>
-            <button 
-              onClick={() => toggleMovieDescription(movie.movie_id)}
-              className="ml-1 p-1 text-indigo-600 hover:bg-indigo-50 rounded-full flex-shrink-0"
-              aria-label="Show movie description"
-            >
-              {expandedMovieId === movie.movie_id ? 
-                <X size={16} /> : 
-                <MessageCircle size={16} />
-              }
-            </button>
-          </div>
-          
-          {/* Expanded description */}
-          {expandedMovieId === movie.movie_id && (
-            <div className="absolute z-30 left-0 right-0 top-6 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 p-4 animate-fadeIn">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-bold text-gray-800">{movie.title}</h4>
-                <button 
-                  onClick={() => setExpandedMovieId(null)}
-                  className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <p className="text-sm text-gray-600">
-                {movie.overview}
-              </p>
+          {userNumber === 1 && (
+            <div className="text-xs text-gray-500 mt-1">
+              Checking for new matches every few seconds...
             </div>
           )}
         </div>
-      )}
-    </div>
-  </Card>
-))}
-          </div>
+        
+        {matches.length === 0 ? (
+          <Card className="w-full max-w-md p-8 text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="relative">
+                <X size={48} className="text-gray-400" />
+                <div className="absolute -bottom-2 -right-2 p-1 bg-gray-500 rounded-full">
+                  <MessageCircle size={20} className="text-white" />
+                </div>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-700">No matches found</h3>
+            <p className="text-gray-600">You two need to find some common ground in your movie tastes!</p>
+            <div className="flex flex-col space-y-3">
+              <Button
+                onClick={() => setScreen('category')}
+                variant="outline"
+              >
+                Try Different Category
+              </Button>
+              <Button
+                onClick={() => setScreen('home')}
+                variant="ghost"
+                size="sm"
+              >
+                Return to Home
+              </Button>
+            </div>
+          </Card>
+        ) : (
+          <div className="w-full max-w-3xl">
+            {/* Render the description modal at the root level */}
+            <MovieDescriptionModal />
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+              {matches.map(movie => (
+                <Card key={movie.movie_id} className="overflow-hidden transform transition-all hover:scale-[1.02]">
+                  <div className="relative aspect-[2/3]">
+                    <img 
+                      src={movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : '/placeholder-movie.jpg'} 
+                      alt={movie.title} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-0 right-0 bg-gradient-to-bl from-green-500 to-green-600 text-white p-1.5 m-2 rounded-full shadow-md">
+                      <Heart size={16} fill="white" />
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-800 line-clamp-1">{movie.title}</h3>
+                    <div className="flex items-center mt-1">
+                      <span className="text-yellow-500 mr-1">★</span>
+                      <span className="text-gray-600 text-sm">{formatRating(movie.vote_average)}</span>
+                      <span className="mx-1 text-gray-400">•</span>
+                      <span className="text-gray-600 text-sm">{movie.release_year || 'Unknown'}</span>
+                    </div>
+                    
+                    {/* Movie description section with info button */}
+                    {movie.overview && (
+                      <div className="mt-2 flex items-center justify-between">
+                        <p className="text-sm text-gray-600 line-clamp-2 flex-1">
+                          {movie.overview}
+                        </p>
+                        <button 
+                          onClick={() => toggleMovieDescription(movie.movie_id)}
+                          className="ml-2 p-1.5 bg-indigo-100 text-indigo-600 hover:bg-indigo-200 rounded-full flex-shrink-0 transition-colors"
+                          aria-label="View full description"
+                        >
+                          <MessageCircle size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
           
           <div className="mt-8 text-center space-y-4">
             <p className="text-gray-700">
