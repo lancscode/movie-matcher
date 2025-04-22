@@ -1071,112 +1071,43 @@ export default function MovieMatcher() {
   // Render the Results Screen
   const renderResultsScreen = () => {
     // Movie description modal component - separate from cards with improved z-index
-    // Movie description modal component with mobile fixes
-const MovieDescriptionModal = () => {
-  if (!expandedMovieId) return null;
-  
-  const movie = matches.find(m => m.movie_id === expandedMovieId);
-  if (!movie) return null;
-  
-  // Add body scroll lock and handle iOS issues
-  useEffect(() => {
-    // Capture the current scroll position
-    const scrollY = window.scrollY;
-    
-    // Add styles to body to prevent scrolling but maintain position
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    
-    // Cleanup function to restore scrolling
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      // Restore scroll position
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
-  
-  // Handler to prevent touch events from bubbling
-  const handleTouchStart = (e) => {
-    e.stopPropagation();
-  };
-  
-  return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 999999,
-        display: 'flex',
-        flexDirection: 'column',
-        touchAction: 'none'
-      }}
-      onClick={() => setExpandedMovieId(null)}
-    >
-      {/* Dark overlay */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        }}
-      />
+    const MovieDescriptionModal = () => {
+      if (!expandedMovieId) return null;
       
-      {/* Modal container - centered both horizontally and vertically */}
-      <div 
-        style={{
-          position: 'relative',
-          margin: 'auto',
-          width: '90%',
-          maxWidth: '480px',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          maxHeight: '80%',
-          overflowY: 'auto',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          zIndex: 1000000
-        }}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>{movie.title}</h3>
-          <button 
-            onClick={() => setExpandedMovieId(null)}
-            style={{ 
-              padding: '8px', 
-              backgroundColor: '#f3f4f6', 
-              borderRadius: '9999px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ color: '#f59e0b', marginRight: '4px' }}>★</span>
-          <span style={{ color: '#4b5563' }}>{formatRating(movie.vote_average)}</span>
-          <span style={{ margin: '0 8px' }}>•</span>
-          <span style={{ color: '#4b5563' }}>{movie.release_year || 'Unknown'}</span>
-        </div>
-        
-        <p style={{ color: '#4b5563', lineHeight: '1.5' }}>{movie.overview}</p>
-      </div>
-    </div>
-  );
-};
+      const movie = matches.find(m => m.movie_id === expandedMovieId);
+      if (!movie) return null;
+      
+      return (
+        <>
+          {/* Backdrop with very high z-index */}
+          <div className="modal-backdrop" onClick={() => setExpandedMovieId(null)}></div>
+          
+          {/* Modal container with even higher z-index */}
+          <div className="modal-container">
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
+                <button 
+                  onClick={() => setExpandedMovieId(null)}
+                  className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="flex items-center mb-3">
+                <span className="text-yellow-500 mr-1">★</span>
+                <span className="text-gray-700">{formatRating(movie.vote_average)}</span>
+                <span className="mx-2">•</span>
+                <span className="text-gray-700">{movie.release_year || 'Unknown'}</span>
+              </div>
+              
+              <p className="text-gray-600">{movie.overview}</p>
+            </div>
+          </div>
+        </>
+      );
+    };
     
     return (
       <div className="flex flex-col items-center justify-center p-6 animate-fadeIn">
