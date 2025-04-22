@@ -1072,13 +1072,15 @@ export default function MovieMatcher() {
   const renderResultsScreen = () => {
     // Mobile-friendly movie description modal component
     const MovieDescriptionModal = () => {
-      if (!expandedMovieId) return null;
+      // Use isActive flag instead of early returns
+      const isActive = expandedMovieId !== null;
+      const movie = isActive ? matches.find(m => m.movie_id === expandedMovieId) : null;
       
-      const movie = matches.find(m => m.movie_id === expandedMovieId);
-      if (!movie) return null;
-      
-      // Add body scroll lock and handle iOS issues
+      // Hooks come before any conditional rendering
       useEffect(() => {
+        // Only apply scroll lock when modal is active
+        if (!isActive) return;
+        
         // Capture the current scroll position
         const scrollY = window.scrollY;
         
@@ -1095,12 +1097,15 @@ export default function MovieMatcher() {
           // Restore scroll position
           window.scrollTo(0, scrollY);
         };
-      }, []);
+      }, [isActive]); // Depend on isActive flag
       
       // Handler to prevent touch events from bubbling
       const handleTouchStart = (e) => {
         e.stopPropagation();
       };
+      
+      // Conditional render after hooks
+      if (!isActive || !movie) return null;
       
       return (
         <div 
