@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Heart, X, Film, ArrowRight, Share2, Copy, Star, TrendingUp, Calendar, PlayCircle, RefreshCw, Users, Zap, ChevronLeft, Gift, MessageCircle, Check } from 'lucide-react';
 
 const API_BASE_URL = '//georgetthomas.co.uk/api'; 
@@ -22,14 +22,109 @@ export default function MovieMatcher() {
   const [matchesChecked, setMatchesChecked] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   
-  const sessionInputRef = useRef(null);
-  const waitingTimerRef = useRef(null);
-  
-  // Card drag functionality
+  // Improved swiping states
+  const cardRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
-  const [swipeDirection, setSwipeDirection] = useState(null); // Add this new state
+  const [swipeDirection, setSwipeDirection] = useState(null);
+  
+  const sessionInputRef = useRef(null);
+  const waitingTimerRef = useRef(null);
+  
+  // Throttle utility for smooth swiping
+  const throttle = (func, delay) => {
+    let lastCall = 0;
+    return function(...args) {
+      const now = Date.now();
+      if (now - lastCall < delay) return;
+      lastCall = now;
+      return func(...args);
+    };
+  };
+  
+  // Improved swiping handlers
+  const throttledMouseMove = useCallback(
+    throttle((e) => {
+      if (!isDragging) return;
+      
+      // Get the correct client position for both mouse and touch events
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      const newOffsetX = clientX - startX;
+      
+      // Apply mild resistance at edges but allow free movement in the center
+      let resistedOffset = newOffsetX;
+      const maxOffset = 300; // Maximum allowed movement
+      
+      // Apply non-linear resistance only at extremes
+      if (Math.abs(newOffsetX) > 100) {
+        const excess = Math.abs(newOffsetX) - 100;
+        const resistanceFactor = 0.9 - (excess / 1000); // Gradually increases resistance
+        const resistedExcess = excess * resistanceFactor;
+        resistedOffset = Math.sign(newOffsetX) * (100 + resistedExcess);
+        
+        // Cap at maximum offset
+        resistedOffset = Math.max(Math.min(resistedOffset, maxOffset), -maxOffset);
+      }
+      
+      setOffsetX(resistedOffset);
+      
+      // Update swipe direction for visual feedback - more responsive
+      if (resistedOffset > 30) {
+        setSwipeDirection('right');
+      } else if (resistedOffset < -30) {
+        setSwipeDirection('left');
+      } else {
+        setSwipeDirection(null);
+      }
+    }, 16), // ~60fps (1000ms/60 ≈ 16ms)
+    [isDragging, startX]
+  );
+
+  const handleMouseDown = (e) => {
+    // Prevent default to avoid text selection during swipe
+    e.preventDefault();
+    setIsDragging(true);
+    // Get the correct client position for both mouse and touch events
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+    setStartX(clientX);
+    // We don't reset offsetX here to allow for continuous dragging
+  };
+
+  const handleMouseMove = (e) => {
+    // Call the throttled version
+    throttledMouseMove(e);
+  };
+
+  // Special handler for touch to prevent page scrolling
+  const handleTouchMove = useCallback((e) => {
+    // Prevent page scrolling while swiping
+    e.preventDefault();
+    handleMouseMove(e);
+  }, [handleMouseMove]);
+
+  const handleMouseUp = (e) => {
+    if (!isDragging) return;
+    
+    // Determine swipe action based on offset and apply threshold
+    const swipeThreshold = 100; // Threshold for completing the action
+    
+    if (offsetX > swipeThreshold) {
+      // Animate completion of right swipe
+      setOffsetX(300);
+      setTimeout(() => handleLike(), 200);
+    } else if (offsetX < -swipeThreshold) {
+      // Animate completion of left swipe
+      setOffsetX(-300);
+      setTimeout(() => handleDislike(), 200);
+    } else {
+      // Animate card back to center with spring-like effect
+      setOffsetX(0);
+      setSwipeDirection(null);
+    }
+    
+    setIsDragging(false);
+  };
   
   // Helper function to safely parse JSON regardless of content type
   const safelyParseJson = async (response) => {
@@ -375,75 +470,6 @@ export default function MovieMatcher() {
     }
   };
   
-  // Handle mouse/touch interactions for swiping
-  const handleMouseDown = (e) => {
-    // Prevent default to avoid text selection during swipe
-    e.preventDefault();
-    setIsDragging(true);
-    // Get the correct client position for both mouse and touch events
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-    setStartX(clientX);
-    setOffsetX(0); // Reset offset at the start of new swipe
-  };
-  
-  
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    
-    // Get the correct client position for both mouse and touch events
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-    const newOffsetX = clientX - startX;
-    
-    // Apply mild resistance at edges but allow free movement in the center
-    let resistedOffset = newOffsetX;
-    const maxOffset = 300; // Maximum allowed movement
-    
-    // Apply non-linear resistance only at extremes
-    if (Math.abs(newOffsetX) > 100) {
-      const excess = Math.abs(newOffsetX) - 100;
-      const resistanceFactor = 0.9 - (excess / 1000); // Gradually increases resistance
-      const resistedExcess = excess * resistanceFactor;
-      resistedOffset = Math.sign(newOffsetX) * (100 + resistedExcess);
-      
-      // Cap at maximum offset
-      resistedOffset = Math.max(Math.min(resistedOffset, maxOffset), -maxOffset);
-    }
-    
-    setOffsetX(resistedOffset);
-    
-    // Update swipe direction for visual feedback - more responsive
-    if (resistedOffset > 30) {
-      setSwipeDirection('right');
-    } else if (resistedOffset < -30) {
-      setSwipeDirection('left');
-    } else {
-      setSwipeDirection(null);
-    }
-  };
-  
-  const handleMouseUp = (e) => {
-    if (!isDragging) return;
-    
-    // Determine swipe action based on offset and apply threshold
-    const swipeThreshold = 100; // Threshold for completing the action
-    
-    if (offsetX > swipeThreshold) {
-      // Animate completion of right swipe
-      setOffsetX(300);
-      setTimeout(() => handleLike(), 200);
-    } else if (offsetX < -swipeThreshold) {
-      // Animate completion of left swipe
-      setOffsetX(-300);
-      setTimeout(() => handleDislike(), 200);
-    } else {
-      // Animate card back to center with spring-like effect
-      setOffsetX(0);
-      setSwipeDirection(null);
-    }
-    
-    setIsDragging(false);
-  };
-  
   // Handle swipe actions
   const handleLike = () => {
     if (!movies || movies.length === 0 || currentIndex >= movies.length) {
@@ -679,15 +705,13 @@ export default function MovieMatcher() {
           </div>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-center">
-              <div className="w-full">
-                <input
-                  ref={sessionInputRef}
-                  type="text"
-                  placeholder="Enter session code"
-                  className="w-full h-8 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-center text-lg font-medium placeholder:text-gray-400"
-                />
-              </div>
+            <div className="w-full">
+              <input
+                ref={sessionInputRef}
+                type="text"
+                placeholder="Enter session code"
+                className="w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-center text-lg font-medium placeholder:text-gray-400"
+              />
             </div>
             <Button 
               onClick={joinSession}
@@ -858,11 +882,10 @@ export default function MovieMatcher() {
             
             <div 
               ref={cardRef}
-              className={`relative aspect-[2/3] rounded-2xl overflow-hidden transform ${
-                !isDragging ? 'transition-all duration-300 ease-out' : ''
-              }`}
+              className="relative aspect-[2/3] rounded-2xl overflow-hidden will-change-transform"
               style={{ 
                 transform: `translateX(${offsetX}px) rotate(${offsetX * 0.03}deg)`,
+                transition: isDragging ? 'none' : 'all 300ms cubic-bezier(0.25, 1, 0.5, 1)',
                 boxShadow: `0 ${10 + Math.abs(offsetX * 0.1)}px ${30 + Math.abs(offsetX * 0.2)}px rgba(0, 0, 0, ${0.2 + Math.abs(offsetX * 0.001)})`,
                 borderWidth: swipeDirection ? '2px' : '0px',
                 borderColor: swipeDirection === 'right' ? '#10b981' : swipeDirection === 'left' ? '#ef4444' : 'transparent'
@@ -872,10 +895,9 @@ export default function MovieMatcher() {
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               onTouchStart={handleMouseDown}
-              onTouchMove={handleMouseMove}
+              onTouchMove={handleTouchMove}
               onTouchEnd={handleMouseUp}
             >
-
               {/* Card image */}
               <img 
                 src={currentMovie.poster_path ? `${TMDB_IMAGE_BASE}${currentMovie.poster_path}` : '/placeholder-movie.jpg'} 
@@ -1227,6 +1249,9 @@ export default function MovieMatcher() {
     .translate-y-0 {
       --tw-translate-y: 0px;
       transform: var(--tw-transform);
+    }
+    .will-change-transform {
+      will-change: transform;
     }
   `;
   
