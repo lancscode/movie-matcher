@@ -1081,8 +1081,9 @@ export default function MovieMatcher() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setExpandedMovieId(null)}>
           <div className="fixed inset-0 bg-black opacity-50"></div>
           <div 
-            className="bg-white w-full max-w-md rounded-xl shadow-2xl z-50 p-5 mx-auto relative"
+            className="bg-white w-full max-w-md rounded-xl shadow-2xl z-50 p-5 mx-auto relative animate-fadeIn"
             onClick={e => e.stopPropagation()}
+            style={{ maxHeight: '80vh', overflowY: 'auto' }}
           >
             <div className="flex justify-between items-start mb-3">
               <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
@@ -1179,16 +1180,22 @@ export default function MovieMatcher() {
                     
                     {/* Movie description section with info button */}
                     {movie.overview && (
-                      <div className="mt-2 flex items-center justify-between">
-                        <p className="text-sm text-gray-600 line-clamp-2 flex-1">
-                          {movie.overview}
-                        </p>
+                      <div className="mt-2">
+                        {/* Fixed height container with ellipsis */}
+                        <div className="h-10 overflow-hidden relative">
+                          <p className="text-sm text-gray-600">
+                            {movie.overview}
+                          </p>
+                          {/* Gradient fade for text cutoff */}
+                          <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white to-transparent"></div>
+                        </div>
                         <button 
                           onClick={() => toggleMovieDescription(movie.movie_id)}
-                          className="ml-2 p-1.5 bg-indigo-100 text-indigo-600 hover:bg-indigo-200 rounded-full flex-shrink-0 transition-colors"
+                          className="w-full mt-2 py-1 px-3 bg-indigo-100 text-indigo-600 hover:bg-indigo-200 rounded-lg flex-shrink-0 transition-colors text-sm flex items-center justify-center"
                           aria-label="View full description"
                         >
-                          <MessageCircle size={14} />
+                          <MessageCircle size={14} className="mr-1" />
+                          Read more
                         </button>
                       </div>
                     )}
