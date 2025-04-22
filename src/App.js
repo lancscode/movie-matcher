@@ -394,16 +394,27 @@ export default function MovieMatcher() {
     const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     const newOffsetX = clientX - startX;
     
-    // Apply some resistance to make swiping feel more natural
-    const resistance = 0.8;
-    const resistedOffset = newOffsetX * resistance;
+    // Apply mild resistance at edges but allow free movement in the center
+    let resistedOffset = newOffsetX;
+    const maxOffset = 300; // Maximum allowed movement
+    
+    // Apply non-linear resistance only at extremes
+    if (Math.abs(newOffsetX) > 100) {
+      const excess = Math.abs(newOffsetX) - 100;
+      const resistanceFactor = 0.9 - (excess / 1000); // Gradually increases resistance
+      const resistedExcess = excess * resistanceFactor;
+      resistedOffset = Math.sign(newOffsetX) * (100 + resistedExcess);
+      
+      // Cap at maximum offset
+      resistedOffset = Math.max(Math.min(resistedOffset, maxOffset), -maxOffset);
+    }
     
     setOffsetX(resistedOffset);
     
-    // Update swipe direction for visual feedback
-    if (resistedOffset > 50) {
+    // Update swipe direction for visual feedback - more responsive
+    if (resistedOffset > 30) {
       setSwipeDirection('right');
-    } else if (resistedOffset < -50) {
+    } else if (resistedOffset < -30) {
       setSwipeDirection('left');
     } else {
       setSwipeDirection(null);
@@ -414,18 +425,18 @@ export default function MovieMatcher() {
     if (!isDragging) return;
     
     // Determine swipe action based on offset and apply threshold
-    const swipeThreshold = 80; // Increased for more intentional swipes
+    const swipeThreshold = 100; // Threshold for completing the action
     
     if (offsetX > swipeThreshold) {
-      handleLike();
-      // Add a small delay to allow the animation to complete
-      setTimeout(() => setSwipeDirection(null), 300);
+      // Animate completion of right swipe
+      setOffsetX(300);
+      setTimeout(() => handleLike(), 200);
     } else if (offsetX < -swipeThreshold) {
-      handleDislike();
-      // Add a small delay to allow the animation to complete
-      setTimeout(() => setSwipeDirection(null), 300);
+      // Animate completion of left swipe
+      setOffsetX(-300);
+      setTimeout(() => handleDislike(), 200);
     } else {
-      // Reset if threshold not reached
+      // Animate card back to center with spring-like effect
       setOffsetX(0);
       setSwipeDirection(null);
     }
@@ -847,11 +858,11 @@ export default function MovieMatcher() {
             
             <div 
               ref={cardRef}
-              className={`relative aspect-[2/3] rounded-2xl overflow-hidden transform transition-all ${
-                !isDragging ? 'transition-transform duration-300' : ''
-              } ${swipeDirection === 'right' ? 'bg-green-50' : swipeDirection === 'left' ? 'bg-red-50' : ''}`}
+              className={`relative aspect-[2/3] rounded-2xl overflow-hidden transform ${
+                !isDragging ? 'transition-all duration-300 ease-out' : ''
+              }`}
               style={{ 
-                transform: `translateX(${offsetX}px) rotate(${offsetX * 0.05}deg)`,
+                transform: `translateX(${offsetX}px) rotate(${offsetX * 0.03}deg)`,
                 boxShadow: `0 ${10 + Math.abs(offsetX * 0.1)}px ${30 + Math.abs(offsetX * 0.2)}px rgba(0, 0, 0, ${0.2 + Math.abs(offsetX * 0.001)})`,
                 borderWidth: swipeDirection ? '2px' : '0px',
                 borderColor: swipeDirection === 'right' ? '#10b981' : swipeDirection === 'left' ? '#ef4444' : 'transparent'
@@ -864,6 +875,7 @@ export default function MovieMatcher() {
               onTouchMove={handleMouseMove}
               onTouchEnd={handleMouseUp}
             >
+
               {/* Card image */}
               <img 
                 src={currentMovie.poster_path ? `${TMDB_IMAGE_BASE}${currentMovie.poster_path}` : '/placeholder-movie.jpg'} 
