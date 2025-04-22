@@ -26,10 +26,10 @@ export default function MovieMatcher() {
   const waitingTimerRef = useRef(null);
   
   // Card drag functionality
-  const cardRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState(null); // Add this new state
   
   // Helper function to safely parse JSON regardless of content type
   const safelyParseJson = async (response) => {
@@ -377,28 +377,60 @@ export default function MovieMatcher() {
   
   // Handle mouse/touch interactions for swiping
   const handleMouseDown = (e) => {
+    // Prevent default to avoid text selection during swipe
+    e.preventDefault();
     setIsDragging(true);
-    setStartX(e.clientX || (e.touches && e.touches[0].clientX) || 0);
+    // Get the correct client position for both mouse and touch events
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+    setStartX(clientX);
+    setOffsetX(0); // Reset offset at the start of new swipe
   };
+  
   
   const handleMouseMove = (e) => {
     if (!isDragging) return;
+    
+    // Get the correct client position for both mouse and touch events
     const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     const newOffsetX = clientX - startX;
-    setOffsetX(newOffsetX);
+    
+    // Apply some resistance to make swiping feel more natural
+    const resistance = 0.8;
+    const resistedOffset = newOffsetX * resistance;
+    
+    setOffsetX(resistedOffset);
+    
+    // Update swipe direction for visual feedback
+    if (resistedOffset > 50) {
+      setSwipeDirection('right');
+    } else if (resistedOffset < -50) {
+      setSwipeDirection('left');
+    } else {
+      setSwipeDirection(null);
+    }
   };
   
-  const handleMouseUp = () => {
+  const handleMouseUp = (e) => {
     if (!isDragging) return;
-    setIsDragging(false);
     
-    if (offsetX > 100) {
+    // Determine swipe action based on offset and apply threshold
+    const swipeThreshold = 80; // Increased for more intentional swipes
+    
+    if (offsetX > swipeThreshold) {
       handleLike();
-    } else if (offsetX < -100) {
+      // Add a small delay to allow the animation to complete
+      setTimeout(() => setSwipeDirection(null), 300);
+    } else if (offsetX < -swipeThreshold) {
       handleDislike();
+      // Add a small delay to allow the animation to complete
+      setTimeout(() => setSwipeDirection(null), 300);
     } else {
+      // Reset if threshold not reached
       setOffsetX(0);
+      setSwipeDirection(null);
     }
+    
+    setIsDragging(false);
   };
   
   // Handle swipe actions
@@ -815,10 +847,14 @@ export default function MovieMatcher() {
             
             <div 
               ref={cardRef}
-              className="relative aspect-[2/3] rounded-2xl overflow-hidden transform transition-all"
+              className={`relative aspect-[2/3] rounded-2xl overflow-hidden transform transition-all ${
+                !isDragging ? 'transition-transform duration-300' : ''
+              } ${swipeDirection === 'right' ? 'bg-green-50' : swipeDirection === 'left' ? 'bg-red-50' : ''}`}
               style={{ 
                 transform: `translateX(${offsetX}px) rotate(${offsetX * 0.05}deg)`,
-                boxShadow: `0 ${10 + Math.abs(offsetX * 0.1)}px ${30 + Math.abs(offsetX * 0.2)}px rgba(0, 0, 0, ${0.2 + Math.abs(offsetX * 0.001)})`
+                boxShadow: `0 ${10 + Math.abs(offsetX * 0.1)}px ${30 + Math.abs(offsetX * 0.2)}px rgba(0, 0, 0, ${0.2 + Math.abs(offsetX * 0.001)})`,
+                borderWidth: swipeDirection ? '2px' : '0px',
+                borderColor: swipeDirection === 'right' ? '#10b981' : swipeDirection === 'left' ? '#ef4444' : 'transparent'
               }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
