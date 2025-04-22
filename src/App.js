@@ -1078,10 +1078,10 @@ export default function MovieMatcher() {
       if (!movie) return null;
       
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setExpandedMovieId(null)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setExpandedMovieId(null)}>
           <div className="fixed inset-0 bg-black opacity-50"></div>
           <div 
-            className="bg-white w-full max-w-md rounded-xl shadow-2xl z-50 p-5 mx-auto relative animate-fadeIn"
+            className="bg-white w-full max-w-md rounded-xl shadow-2xl z-[110] p-5 mx-auto relative animate-fadeIn"
             onClick={e => e.stopPropagation()}
             style={{ maxHeight: '80vh', overflowY: 'auto' }}
           >
