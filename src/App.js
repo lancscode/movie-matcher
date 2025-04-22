@@ -44,6 +44,15 @@ export default function MovieMatcher() {
     };
   };
   
+  // Toggle movie description expansion
+  const toggleMovieDescription = (movieId) => {
+    if (expandedMovieId === movieId) {
+      setExpandedMovieId(null); // Close if already open
+    } else {
+      setExpandedMovieId(movieId); // Open the clicked movie
+    }
+  };
+  
   // Improved swiping handlers
   const throttledMouseMove = useCallback(
     throttle((e) => {
@@ -554,15 +563,6 @@ export default function MovieMatcher() {
     };
   }, [screen, sessionId]);
   
-  // Toggle movie description expansion
-  const toggleMovieDescription = (movieId) => {
-    if (expandedMovieId === movieId) {
-      setExpandedMovieId(null); // Close if already open
-    } else {
-      setExpandedMovieId(movieId); // Open the clicked movie
-    }
-  };
-
   // Reset app state when returning to home screen
   useEffect(() => {
     if (screen === 'home') {
@@ -1196,24 +1196,25 @@ export default function MovieMatcher() {
                 </Card>
               ))}
             </div>
-          
-          <div className="mt-8 text-center space-y-4">
-            <p className="text-gray-700">
-              Great! You've found some movies to watch together. Enjoy your movie night!
-            </p>
-            <Button
-              onClick={() => setScreen('home')}
-              size="lg"
-            >
-              Start New Session
-            </Button>
+            
+            <div className="mt-8 text-center space-y-4">
+              <p className="text-gray-700">
+                Great! You've found some movies to watch together. Enjoy your movie night!
+              </p>
+              <Button
+                onClick={() => setScreen('home')}
+                size="lg"
+              >
+                Start New Session
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <ErrorMessage message={error} />
-    </div>
-  );
+        <ErrorMessage message={error} />
+      </div>
+    );
+  };
   
   // Render the Debug Screen (functionality kept)
   const renderDebugScreen = () => (
@@ -1370,5 +1371,4 @@ export default function MovieMatcher() {
       </main>
     </div>
   );
-              }
-            }
+}
