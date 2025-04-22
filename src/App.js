@@ -642,7 +642,7 @@ export default function MovieMatcher() {
                   ref={sessionInputRef}
                   type="text"
                   placeholder="Enter session code"
-                  className="w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-center text-lg font-medium placeholder:text-gray-400"
+                  className="w-full h-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-center text-lg font-medium placeholder:text-gray-400"
                 />
               </div>
             </div>
