@@ -21,6 +21,7 @@ export default function MovieMatcher() {
   const [waitingTimeElapsed, setWaitingTimeElapsed] = useState(0);
   const [matchesChecked, setMatchesChecked] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [expandedMovieId, setExpandedMovieId] = useState(null);
   
   // Improved swiping states
   const cardRef = useRef(null);
@@ -553,6 +554,15 @@ export default function MovieMatcher() {
     };
   }, [screen, sessionId]);
   
+  // Toggle movie description expansion
+  const toggleMovieDescription = (movieId) => {
+    if (expandedMovieId === movieId) {
+      setExpandedMovieId(null); // Close if already open
+    } else {
+      setExpandedMovieId(movieId); // Open the clicked movie
+    }
+  };
+
   // Reset app state when returning to home screen
   useEffect(() => {
     if (screen === 'home') {
@@ -567,6 +577,7 @@ export default function MovieMatcher() {
       setWaitingTimeElapsed(0);
       setMatchesChecked(false);
       setIsDescriptionExpanded(false);
+      setExpandedMovieId(null);
       
       // Clear any existing timers
       if (waitingTimerRef.current) {
@@ -1102,10 +1113,18 @@ export default function MovieMatcher() {
           </div>
         </Card>
       ) : (
-        <div className="w-full max-w-3xl">
+        <div className="w-full max-w-3xl relative">
+          {/* Semi-transparent backdrop when description is expanded */}
+          {expandedMovieId && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-30 z-20"
+              onClick={() => setExpandedMovieId(null)}
+            ></div>
+          )}
+          
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
             {matches.map(movie => (
-              <Card key={movie.movie_id} className="overflow-hidden transform transition-all hover:scale-[1.02]">
+              <Card key={movie.movie_id} className="overflow-hidden transform transition-all hover:scale-[1.02] relative">
                 <div className="relative aspect-[2/3]">
                   <img 
                     src={movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : '/placeholder-movie.jpg'} 
@@ -1125,17 +1144,42 @@ export default function MovieMatcher() {
                     <span className="text-gray-600 text-sm">{movie.release_year || 'Unknown'}</span>
                   </div>
                   
-                  {/* Added hover description for matched movies */}
+                  {/* Movie description section with button */}
                   {movie.overview && (
-                    <div className="relative mt-2 group">
-                      <p className="text-sm text-gray-600 line-clamp-1 cursor-pointer">
-                        {movie.overview}
-                      </p>
-                      <div className="absolute z-20 left-0 right-0 bottom-full mb-2 hidden group-hover:block">
-                        <div className="bg-black bg-opacity-90 p-3 rounded-lg shadow-lg text-white text-sm">
+                    <div className="relative mt-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600 line-clamp-1">
                           {movie.overview}
-                        </div>
+                        </p>
+                        <button 
+                          onClick={() => toggleMovieDescription(movie.movie_id)}
+                          className="ml-1 p-1 text-indigo-600 hover:bg-indigo-50 rounded-full flex-shrink-0"
+                          aria-label="Show movie description"
+                        >
+                          {expandedMovieId === movie.movie_id ? 
+                            <X size={16} /> : 
+                            <MessageCircle size={16} />
+                          }
+                        </button>
                       </div>
+                      
+                      {/* Expanded description modal */}
+                      {expandedMovieId === movie.movie_id && (
+                        <div className="absolute z-30 left-0 right-0 top-6 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 p-4 animate-fadeIn">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-bold text-gray-800">{movie.title}</h4>
+                            <button 
+                              onClick={() => setExpandedMovieId(null)}
+                              className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {movie.overview}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
