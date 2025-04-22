@@ -1070,41 +1070,50 @@ export default function MovieMatcher() {
   
   // Render the Results Screen
   const renderResultsScreen = () => {
-    // Movie description modal component - separate from cards
+    // Movie description modal component - separate from cards with improved z-index
     const MovieDescriptionModal = () => {
       if (!expandedMovieId) return null;
       
       const movie = matches.find(m => m.movie_id === expandedMovieId);
       if (!movie) return null;
       
+      // Add body scroll lock
+      useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+          document.body.style.overflow = '';
+        };
+      }, []);
+      
       return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setExpandedMovieId(null)}>
-          <div className="fixed inset-0 bg-black opacity-50"></div>
-          <div 
-            className="bg-white w-full max-w-md rounded-xl shadow-2xl z-[110] p-5 mx-auto relative animate-fadeIn"
-            onClick={e => e.stopPropagation()}
-            style={{ maxHeight: '80vh', overflowY: 'auto' }}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
-              <button 
-                onClick={() => setExpandedMovieId(null)}
-                className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
-              >
-                <X size={20} />
-              </button>
+        <>
+          {/* Backdrop with very high z-index */}
+          <div className="modal-backdrop" onClick={() => setExpandedMovieId(null)}></div>
+          
+          {/* Modal container with even higher z-index */}
+          <div className="modal-container">
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
+                <button 
+                  onClick={() => setExpandedMovieId(null)}
+                  className="p-1 text-gray-500 hover:bg-gray-100 rounded-full"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="flex items-center mb-3">
+                <span className="text-yellow-500 mr-1">★</span>
+                <span className="text-gray-700">{formatRating(movie.vote_average)}</span>
+                <span className="mx-2">•</span>
+                <span className="text-gray-700">{movie.release_year || 'Unknown'}</span>
+              </div>
+              
+              <p className="text-gray-600">{movie.overview}</p>
             </div>
-            
-            <div className="flex items-center mb-3">
-              <span className="text-yellow-500 mr-1">★</span>
-              <span className="text-gray-700">{formatRating(movie.vote_average)}</span>
-              <span className="mx-2">•</span>
-              <span className="text-gray-700">{movie.release_year || 'Unknown'}</span>
-            </div>
-            
-            <p className="text-gray-600">{movie.overview}</p>
           </div>
-        </div>
+        </>
       );
     };
     
@@ -1291,31 +1300,46 @@ export default function MovieMatcher() {
 
   // Additional CSS styles
   const additionalStyles = `
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeIn {
-      animation: fadeIn 0.3s ease-out forwards;
-    }
-    .perspective-1000 {
-      perspective: 1000px;
-    }
-    .transform {
-      transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-    }
-    .-translate-y-1/2 {
-      --tw-translate-y: -50%;
-      transform: var(--tw-transform);
-    }
-    .translate-y-0 {
-      --tw-translate-y: 0px;
-      transform: var(--tw-transform);
-    }
-    .will-change-transform {
-      will-change: transform;
-    }
-  `;
+  /* Other existing styles... */
+  
+  /* Modal styles */
+  .modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    z-index: 9999 !important;
+  }
+      
+  .modal-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10000 !important;
+    padding: 1rem !important;
+  }
+      
+  .modal-content {
+    background: white !important;
+    width: 100% !important;
+    max-width: 28rem !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    padding: 1.25rem !important;
+    margin: 0 auto !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    animation: fadeIn 0.3s ease-out forwards !important;
+    position: relative !important;
+  }
+`;
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
